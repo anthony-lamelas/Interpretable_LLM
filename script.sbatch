@@ -21,7 +21,8 @@ module load cuda/11.3
 
 # Activate your conda environment that has PyTorch, transformers, and other dependencies installed.
 # Replace "ml_env" with your environment name.
-source activate ml_env
+source ~/.bashrc
+conda activate /scratch/hem9984/finetune_llm/data/ml_env
 
 # (Optional) Change to the directory where your training script resides.
 cd /home/hem9984/finetune_llm
@@ -31,8 +32,8 @@ mkdir -p logs
 
 # Run the training script.
 # Adjust the command-line arguments (--tar_file, --output_dir, etc.) as needed.
-python train.py --tar_file /path/to/your/input_pdfs.zip \
---output_dir //home/hem9984/finetune_llm/output \
+python train.py --tar_file /scratch/hem9984/finetune_llm/data/data.tar.gz \
+--output_dir /home/hem9984/finetune_llm/output \
 --model_name gpt2 \
 --aux_layer_index 6 \
 --aux_loss_weight 1.0 \
