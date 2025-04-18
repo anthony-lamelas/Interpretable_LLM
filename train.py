@@ -27,8 +27,9 @@ from tqdm import tqdm
 import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
+from torch.optim import AdamW
 
-from transformers import GPT2LMHeadModel, GPT2TokenizerFast, AdamW, get_linear_schedule_with_warmup
+from transformers import GPT2LMHeadModel, GPT2TokenizerFast, get_linear_schedule_with_warmup
 from PyPDF2 import PdfReader  # ensure PyPDF2 is installed (pip install PyPDF2)
 
 # Set up logging
