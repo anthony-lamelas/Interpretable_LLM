@@ -26,7 +26,7 @@ conda activate /scratch/hem9984/finetune_llm/ml_env
 
 
 # (Optional) Change to the directory where your training script resides.
-cd /scratch/hem9984/finetune_llm
+cd /scratch/hem9984/finetune_llm/data
 
 # Logs
 # mkdir -p logs
@@ -43,4 +43,6 @@ python train.py --tar_file /scratch/hem9984/finetune_llm/data.tar.gz \
 --batch_size 4 \
 --num_epochs 3 \
 --learning_rate 5e-5
- final check
+
+
+
