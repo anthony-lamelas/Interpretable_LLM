@@ -33,8 +33,8 @@ cd /scratch/hem9984/finetune_llm/data
 
 # Run the training script.
 # Adjust the command-line arguments (--tar_file, --output_dir, etc.) as needed.
-python train.py --tar_file /scratch/hem9984/finetune_llm/data.tar.gz \
---output_dir /scratch/hem9984/finetune_llm/output \
+python train.py --tar_file /scratch/hem9984/finetune_llm/data/data.tar.gz \
+--output_dir /scratch/hem9984/finetune_llm/data/output \
 --model_name gpt2 \
 --aux_layer_index 6 \
 --aux_loss_weight 1.0 \
@@ -43,6 +43,3 @@ python train.py --tar_file /scratch/hem9984/finetune_llm/data.tar.gz \
 --batch_size 4 \
 --num_epochs 3 \
 --learning_rate 5e-5
-
-
-
