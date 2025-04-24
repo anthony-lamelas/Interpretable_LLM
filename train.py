@@ -21,8 +21,10 @@ import glob
 import gzip
 import shutil
 import logging
+import io
 
 from tqdm import tqdm
+from bs4 import BeautifulSoup
 
 import torch
 from torch import nn
@@ -47,12 +49,44 @@ def extract_text_from_pdf(pdf_file_obj):
     try:
         reader = PdfReader(pdf_file_obj)
         for page in reader.pages:
-            page_text = page.extract_text()
-            if page_text:
+            page_text = page.extract_text() # altered this line and the one below
+            if isinstance(page_text, str) and page_text.strip(): 
                 text += page_text + "\n"
     except Exception as e:
         logger.error(f"Error processing PDF: {e}")
     return text
+
+# ----- NEW FUNCTION TO HANDLE MULTIPLE FORMATS -----
+def extract_text_from_gz(gz_path):
+    try:
+        with gzip.open(gz_path, 'rb') as f_in:
+            content_bytes = f_in.read()
+
+        file_stub = os.path.splitext(gz_path)[0].lower()
+        file_like = io.BytesIO(content_bytes)
+
+        if file_stub.endswith(".pdf"):
+            return extract_text_from_pdf(file_like)
+
+        elif file_stub.endswith(".html") or file_stub.endswith(".htm"):
+            html = content_bytes.decode("utf-8", errors="ignore")
+            soup = BeautifulSoup(html, "html.parser")
+            return soup.get_text()
+
+        elif file_stub.endswith(".txt"):
+            return content_bytes.decode("utf-8", errors="ignore")
+
+        elif file_stub.endswith(".ps"):
+            logger.warning(f"PS file not supported (skipped): {gz_path}")
+            return ""
+
+        else:
+            logger.warning(f"Skipping unknown file type: {gz_path}")
+            return ""
+    except Exception as e:
+        logger.error(f"Failed to decompress and read {gz_path}: {e}")
+        return ""
+
 
 def extract_all_pdf_texts(tar_file, extract_dir="extracted_files"):
     """
@@ -60,31 +94,24 @@ def extract_all_pdf_texts(tar_file, extract_dir="extracted_files"):
     decompresses them, and extracts text from each PDF.
     Returns a list of extracted text strings.
     """
-    # Clean previous extraction folder if exists
-    if os.path.exists(extract_dir):
-        shutil.rmtree(extract_dir)
-    os.makedirs(extract_dir, exist_ok=True)
+    if not os.path.exists(extract_dir):
+        os.makedirs(extract_dir, exist_ok=True)
+        logger.info(f"Extracting tar.gz archive: {tar_file}")
+        with tarfile.open(tar_file, "r:gz") as tar:
+            tar.extractall(path=extract_dir)
+    else:
+        logger.info(f"Skipping extraction — folder already exists: {extract_dir}")
 
-    # Extract the tar.gz archive to extract_dir
-    logger.info(f"Extracting tar.gz archive: {tar_file}")
-    with tarfile.open(tar_file, "r:gz") as tar:
-        tar.extractall(path=extract_dir)
 
-    # Recursively find all .pdf.gz files in extract_dir
-    pdf_gz_files = glob.glob(os.path.join(extract_dir, "**", "*.pdf.gz"), recursive=True)
-    logger.info(f"Found {len(pdf_gz_files)} .pdf.gz files.")
+    # ----- UPDATED to support all .gz types -----
+    gz_files = glob.glob(os.path.join(extract_dir, "**", "*.gz"), recursive=True)
+    logger.info(f"Found {len(gz_files)} compressed files.")
 
     texts = []
-    for pdf_gz in tqdm(pdf_gz_files, desc="Processing .pdf.gz files"):
-        try:
-            # Open the compressed PDF file in binary mode
-            with gzip.open(pdf_gz, 'rb') as f_in:
-                # PyPDF2 accepts a file-like object. Optionally, we can load into bytes.
-                text = extract_text_from_pdf(f_in)
-                if text.strip():
-                    texts.append(text)
-        except Exception as e:
-            logger.error(f"Error processing {pdf_gz}: {e}")
+    for gz_path in tqdm(gz_files, desc="Processing .gz files"):
+        text = extract_text_from_gz(gz_path)
+        if text.strip():
+            texts.append(text)
     return texts
 
 class PDFTextDataset(Dataset):
@@ -153,7 +180,7 @@ class LayerwiseAuxLM(nn.Module):
         outputs = self.model(input_ids, labels=labels, output_hidden_states=True)
         logits = outputs.logits  # final layer logits
         hidden_states = outputs.hidden_states  # (embedding, layer1, ..., layer_n)
-        
+        #jcole
         loss = None
         main_loss = None
         aux_loss = None
