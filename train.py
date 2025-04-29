@@ -47,14 +47,17 @@ def extract_text_from_pdf(pdf_file_obj):
     """
     text = ""
     try:
+        pdf_file_obj.seek(0)  # <<< ADD THIS LINE
         reader = PdfReader(pdf_file_obj)
         for page in reader.pages:
-            page_text = page.extract_text() # altered this line and the one below
-            if isinstance(page_text, str) and page_text.strip(): 
+            page_text = page.extract_text()
+            if isinstance(page_text, str) and page_text.strip():
                 text += page_text + "\n"
     except Exception as e:
         logger.error(f"Error processing PDF: {e}")
     return text
+
+
 
 # ----- NEW FUNCTION TO HANDLE MULTIPLE FORMATS -----
 def extract_text_from_gz(gz_path):
