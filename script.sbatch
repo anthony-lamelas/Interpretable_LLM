@@ -22,7 +22,7 @@ module load cuda/11.3.1
 # Activate your conda environment that has PyTorch, transformers, and other dependencies installed.
 # Replace "ml_env" with your environment name.
 source ~/.bashrc
-conda activate /scratch/hem9984/finetune_llm/ml_env
+conda activate /vast/hem9984/conda_envs/ml_env
 
 
 # (Optional) Change to the directory where your training script resides.
